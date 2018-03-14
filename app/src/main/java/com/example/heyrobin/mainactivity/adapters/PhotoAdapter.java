@@ -11,15 +11,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.heyrobin.mainactivity.R;
-import com.example.heyrobin.mainactivity.controllers.PhotoDetailedActivity;
+import com.example.heyrobin.mainactivity.presentation.PhotoDetailedActivity;
 import com.example.heyrobin.mainactivity.domain.Photo;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-
-/**
- * Created by HeyRobin on 13-3-2018.
- */
 
 public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> {
 
@@ -57,8 +53,6 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
             //Log
             Log.d(TAG, "PhotoAdapter.ViewHolder called");
 
-
-
             //Setting onClickListener (this class)
             view.setOnClickListener(this);
 
@@ -66,7 +60,6 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
             mImageView = (ImageView) view.findViewById(R.id.list_row_image);
             mTextView = (TextView) view.findViewById(R.id.list_row_image_id);
         }
-
 
         //What needs to happen when clicked
         @Override
@@ -79,7 +72,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
             Log.d(TAG, "Adapter position = " + position);
 
             Photo photo = photos.get(position);
-            Log.d(TAG, "Photo id retrieved: " + photo.getId());
+            Log.d(TAG, "Photo id retrieved: " + photo.getID());
 
             //Making a new intent
             Intent photoIntent = new Intent(
@@ -112,18 +105,17 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
         return new ViewHolder(view);
     }
 
-
     //Replacing the content of a view once it is no longer used
     @Override
     public void onBindViewHolder(PhotoAdapter.ViewHolder holder, int position) {
         Log.d(TAG, "onBindViewHolder called");
 
         Photo photo = photos.get(position);
-        Log.d(TAG, "Photo retrieved: " + photo.getId());
+        Log.d(TAG, "Photo retrieved: " + photo.getID());
 
-        holder.mTextView.setText(photo.getIdStringFormat());
+        holder.mTextView.setText(photo.getID());
 
-        Picasso.get().load(photo.getPhotoURL()).fit().centerInside().into(holder.mImageView);
+        Picasso.get().load(photo.getImgURL()).fit().centerInside().into(holder.mImageView);
         Log.d(TAG, "Variables set");
     }
 

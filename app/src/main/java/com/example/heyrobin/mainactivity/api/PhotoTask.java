@@ -4,9 +4,10 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.heyrobin.mainactivity.domain.Photo;
-import com.example.heyrobin.mainactivity.interfaces.OnPhotoAvailable;
+import com.example.heyrobin.mainactivity.adapters.OnPhotoAvailable;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -14,136 +15,131 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
-/**
- * Created by HeyRobin on 13-3-2018.
- */
-
+//PhotoTask class made to retrieve the photo's from the NASA Api
 public class PhotoTask extends AsyncTask<String, Void, String> {
 
-    //Callback variable
+    // Callback
     private OnPhotoAvailable listener = null;
-    private final static String TAG = "PhotoTask";
 
+    // Statics
+    private static final String TAG = PhotoTask.class.getSimpleName();
 
-    //Constructor: The requesting class is telling this class that it wants response
+    // Constructor, set listener
     public PhotoTask(OnPhotoAvailable listener) {
         this.listener = listener;
-        Log.d(TAG, "Constructor PhotoTask called");
     }
 
-
-    //Establish a internet connection
     @Override
-    protected String doInBackground(String... strings) {
+    protected String doInBackground(String... params) {
 
-        //inputStream
         InputStream inputStream = null;
-
-        //Getting the responsCode from the conncection (404 - NOT FOUND for example)
-        int responseCode = -1;
-
-        //URL retrieved from .execute()
-        String photoUrl = strings[0];
-        Log.d(TAG, "PhotoURL = " + photoUrl);
-
-        //Result for return
+        int responsCode = -1;
+        // The URL to use .execute() on
+        String photoUrl = params[0];
+        // The result for return
         String response = "";
 
+        Log.i(TAG, "doInBackground called. PhotoURL: " + photoUrl);
 
-        //Setting up a connection
+        //Setup a connection
         try {
-
-            //Create a new URL and opening the connection
+            //URL connection made
             URL url = new URL(photoUrl);
             URLConnection urlConnection = url.openConnection();
+            Log.d(TAG, "URL connection made");
 
-            //Checking if the connection is not null
-            if (!(urlConnection instanceof HttpURLConnection))  {
+            if (!(urlConnection instanceof HttpURLConnection)) {
                 return null;
             }
 
-            //Establishing a HTTP connection
-            HttpURLConnection httpURLConnection = (HttpURLConnection) urlConnection;
-            httpURLConnection.setAllowUserInteraction(false);
-            httpURLConnection.setInstanceFollowRedirects(true);
-            httpURLConnection.setRequestMethod("GET");
+            // Initiate a HTTP connection
+            HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
+            httpConnection.setAllowUserInteraction(false);
+            httpConnection.setInstanceFollowRedirects(true);
+            httpConnection.setRequestMethod("GET");
 
-            //Execute the request
-            httpURLConnection.connect();
+            // Execute the requesy
+            httpConnection.connect();
 
-            //Check if the request succeeded
-            responseCode = httpURLConnection.getResponseCode();
-            Log.d(TAG, "responseCode = " + responseCode);
-
-            if (responseCode == httpURLConnection.HTTP_OK)  {
-                inputStream = httpURLConnection.getInputStream();
+            // retrieve the response code (404 - NOT FOUND for example)
+            responsCode = httpConnection.getResponseCode();
+            if (responsCode == HttpURLConnection.HTTP_OK) {
+                inputStream = httpConnection.getInputStream();
                 response = getStringFromInputStream(inputStream);
-                Log.d(TAG, "Response = " + response);
-
-            } else  {
-                Log.d(TAG, "ERROR, Invalid Response");
+                Log.i(TAG, "doInBackground response = " + response);
+            } else {
+                Log.e(TAG, "Error, invalid response");
             }
-
-        } catch(Exception e)    {
-            e.printStackTrace();
+        } catch (MalformedURLException e) {
+            Log.e(TAG, "doInBackground MalformedURLEx " + e.getLocalizedMessage());
+            return null;
+        } catch (IOException e) {
+            Log.e("TAG", "doInBackground IOException " + e.getLocalizedMessage());
             return null;
         }
-
         return response;
     }
 
 
-    //OnPostExecute processes the result from the doOnBackground method
-    @Override
+    //Process the data from doOnBackground
     protected void onPostExecute(String response) {
-        Log.d(TAG, "OnPostExecute called. response = " + response);
+        Log.i(TAG, "onPostExecute " + response);
 
-        //Check if the response is not null
-        if (response == null || response.equals("")) {
-            Log.d(TAG, "OnPostExecute received an empty response");
+        // Check for response
+        if(response == null || response.equals("")) {
+            Log.e(TAG, "onPostExecute kreeg een lege response!");
             return;
         }
 
-        //The response is a JSON object
+        //Create a new JSON object
         JSONObject jsonObject;
-
         try {
-
-            //Creating a new JSON object with the response
+            // Top level json object
             jsonObject = new JSONObject(response);
 
-            //Retrieving all users from the object "results"
-            JSONArray photos = jsonObject.getJSONArray("photos");
+            // Get all users and start looping
+            JSONArray photosArray = jsonObject.getJSONArray("photos");
+            for(int idx = 0; idx < photosArray.length(); idx++) {
+                // array level objects and get photos
+                JSONObject photoObject = photosArray.getJSONObject(idx);
 
-            //Start a loop to get all the data, with a max of 25 photo's
-            for (int i = 0; i < photos.length(); i++)    {
+                // Get id, camera, en verkrijgt rover array ( name, max_date, total_photos
+                String id = photoObject.getString("id");
+                String cameraName =  photoObject.getJSONObject("camera").getString("full_name");
+                String robotName = photoObject.getJSONObject("rover").getString("name");
+                String imageDate = photoObject.getJSONObject("rover").getString("max_date");
+                String imageTotal = photoObject.getJSONObject("rover").getString("total_photos");
 
-                //Make a new user object from the user at position i
-                JSONObject photo = photos.getJSONObject(i);
-                int id = photo.getInt("id");
-                String photoUrl = photo.getString("img_src");
+                Log.i(TAG, "Got photo " + id + " " + cameraName);
 
-                JSONObject camera = photo.getJSONObject("camera");
-                String cameraName = camera.getString("full_name");
-                Log.d(TAG, "Got the following results: id = " + id + ", photoUrl = " + photoUrl + ", cameraName: " + cameraName);
+                // Get image url
+                String imageURL = photoObject.getString("img_src");
 
-                Photo newPhoto = new Photo(id, photoUrl, cameraName);
+                // Create new Product object
+                // Builder Design Pattern
+                Photo photo = new Photo.PhotoBuilder(id, cameraName, robotName, imageDate, imageTotal, imageURL)
+                        .setID(id)
+                        .setCameraName(cameraName)
+                        .setRobotName(robotName)
+                        .setImageURL(imageURL)
+                        .setImageInformation(imageDate, imageTotal)
+                        .build();
 
-                //create a callback with the new data
-                listener.OnPhotoAvailable(newPhoto);
+                //Callback
+                listener.OnPhotoAvailable(photo);
             }
-
-        } catch(Exception e)    {
-            e.printStackTrace();
+        } catch( JSONException ex) {
+            Log.e(TAG, "onPostExecute JSONException " + ex.getLocalizedMessage());
         }
     }
 
-
-    //Converting a inputStream to a String
+    // convert InputStream to String
     private static String getStringFromInputStream(InputStream is) {
+        Log.d(TAG, "getStringFromInputStream aangeroepen.");
 
         BufferedReader br = null;
         StringBuilder sb = new StringBuilder();
