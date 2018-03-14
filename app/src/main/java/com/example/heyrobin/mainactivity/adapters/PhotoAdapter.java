@@ -1,5 +1,6 @@
 package com.example.heyrobin.mainactivity.adapters;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -11,7 +12,6 @@ import android.widget.TextView;
 
 import com.example.heyrobin.mainactivity.R;
 import com.example.heyrobin.mainactivity.controllers.PhotoDetailedActivity;
-import com.example.heyrobin.mainactivity.domain.Color;
 import com.example.heyrobin.mainactivity.domain.Photo;
 import com.squareup.picasso.Picasso;
 
@@ -26,12 +26,14 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
     //Variables
     private static final String TAG = "PhotoAdapter called";
     private ArrayList<Photo> photos;
+    private Context context;
 
     //Constructor
-    public PhotoAdapter(ArrayList<Photo> photos)  {
+    public PhotoAdapter(ArrayList<Photo> photos, Context context)  {
         Log.d(TAG, "PhotoAdapter constructor called. Amount of photos received: " + photos.size());
 
         this.photos = photos;
+        this.context = context;
     }
 
 
@@ -98,7 +100,7 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
         Log.d(TAG, "onCreateViewHolder called");
 
         //Create a new view
-        LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
+        LayoutInflater layoutInflater = LayoutInflater.from(context);
         Log.d(TAG, "Inflater made");
 
         //Inflating the view with the content
@@ -120,7 +122,8 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.ViewHolder> 
         Log.d(TAG, "Photo retrieved: " + photo.getId());
 
         holder.mTextView.setText(photo.getIdStringFormat());
-        Picasso.get().load(photo.getPhotoURL()).into(holder.mImageView);
+
+        Picasso.get().load(photo.getPhotoURL()).fit().centerInside().into(holder.mImageView);
         Log.d(TAG, "Variables set");
     }
 

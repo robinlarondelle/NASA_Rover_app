@@ -24,7 +24,6 @@
         <activity
             android:name=".controllers.PhotoDetailedActivity"
             android:parentActivityName=".controllers.MainActivity" />
-        <activity android:name=".controllers.TestAvtivity"></activity>
     </application>
 
 </manifest>

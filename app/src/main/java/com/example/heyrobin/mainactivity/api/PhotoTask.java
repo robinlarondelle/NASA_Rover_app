@@ -119,15 +119,18 @@ public class PhotoTask extends AsyncTask<String, Void, String> {
             JSONArray photos = jsonObject.getJSONArray("photos");
 
             //Start a loop to get all the data, with a max of 25 photo's
-            for (int i = 0; i < 25; i++)    {
+            for (int i = 0; i < photos.length(); i++)    {
 
                 //Make a new user object from the user at position i
                 JSONObject photo = photos.getJSONObject(i);
                 int id = photo.getInt("id");
                 String photoUrl = photo.getString("img_src");
-                Log.d(TAG, "Got the following results: id = " + id + ", photoUrl = " + photoUrl);
 
-                Photo newPhoto = new Photo(id, photoUrl);
+                JSONObject camera = photo.getJSONObject("camera");
+                String cameraName = camera.getString("full_name");
+                Log.d(TAG, "Got the following results: id = " + id + ", photoUrl = " + photoUrl + ", cameraName: " + cameraName);
+
+                Photo newPhoto = new Photo(id, photoUrl, cameraName);
 
                 //create a callback with the new data
                 listener.OnPhotoAvailable(newPhoto);
